@@ -1,0 +1,68 @@
+version: 1.0.{build}-{branch}
+
+# Do not build on tags (GitHub only)
+skip_tags: true
+
+os: Windows Server 2012
+
+# scripts that are called at very beginning, before repo cloning
+init:
+- cmd: cmake --version
+- ps: dir $Env:BOOST_ROOT
+- ps: dir -Recurse $Env:BOOST_LIBRARYDIR
+
+#environment:
+#  my_var1: value1
+#  my_var2: value2
+#  # this is how to set encrypted variable. Go to "Encrypt data" page in account menu to encrypt data.
+#  my_secure_var1:
+#    secure: FW3tJ3fMncxvs58/ifSP7w==
+
+environment:
+  BuildRoot: build
+  BOOST_ROOT: C:\Libraries\boost
+
+  matrix:
+    - BOOST_LIBRARYDIR: C:\Libraries\boost\lib32-msvc-12.0
+      platform: x86
+
+    - BOOST_LIBRARYDIR: C:\Libraries\boost\lib64-msvc-12.0
+      platform: x64
+
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
+
+configuration: Release
+
+#build:
+#  parallel: true                  # enable MSBuild parallel builds
+#  project: MyTestAzureCS.sln      # path to Visual Studio solution or project
+#  publish_wap: true               # package Web Application Projects (WAP) for Web Deploy
+#  publish_wap_xcopy: true         # package Web Application Projects (WAP) for XCopy deployment
+#  publish_azure: true             # package Azure Cloud Service projects and push to artifacts
+#  publish_nuget: true             # package projects with .nuspec files and push to artifacts
+#  publish_nuget_symbols: true     # generate and publish NuGet symbol packages
+#  include_nuget_references: true  # add -IncludeReferencedProjects option while packaging NuGet artifacts
+#
+#  # MSBuild verbosity level
+#  verbosity: quiet|minimal|normal|detailed
+
+before_build:
+- ps: mkdir $Env:BuildRoot
+- ps: pushd $Env:BuildRoot
+- cmd: cmake -G "Visual Studio 12 2013" -T "v120" -DBOOST_ROOT="%BOOST_ROOT%" -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" -DBOOST_TEST_STATIC_LINK=ON -DBUILD_TESTING=ON -DBoost_NO_BOOST_CMAKE=ON -DBoost_NO_SYSTEM_PATHS=ON -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF ..
+- ps: popd
+
+build_script:
+- cmd: cmake --build %BuildRoot% --config %configuration% --use-stderr
+
+before_test:
+- ps: pushd $Env:BuildRoot
+
+after_test:
+- ps: popd
+
+test_script:
+- ps: pwd
+- cmd: ctest --build-config Release --output-on-failure --output-log ctest.log --verbose
