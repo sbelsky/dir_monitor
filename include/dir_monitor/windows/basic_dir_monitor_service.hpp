@@ -189,7 +189,11 @@ public:
             );
             boost::unique_lock<boost::mutex> lock(post_mutex);
             while (!post_cancel)
-                post_conditional_variable.wait(lock);
+            {
+                post_conditional_variable.wait_for(lock, boost::chrono::milliseconds(1000));
+                if (this->io_service_.stopped())
+                    break;
+            }
         }
 
     private:

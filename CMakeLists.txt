@@ -17,6 +17,7 @@ set (BOOST_COMPONENTS
 	date_time
 	thread
 	filesystem
+        chrono
 )
 if (BUILD_TESTING)
 	list(APPEND BOOST_COMPONENTS unit_test_framework)
