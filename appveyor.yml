@@ -8,8 +8,8 @@ os: Windows Server 2012
 # scripts that are called at very beginning, before repo cloning
 init:
 - cmd: cmake --version
-- ps: dir $Env:BOOST_ROOT
-- ps: dir -Recurse $Env:BOOST_LIBRARYDIR
+#- ps: dir $Env:BOOST_ROOT
+#- ps: dir -Recurse $Env:BOOST_LIBRARYDIR
 
 #environment:
 #  my_var1: value1
