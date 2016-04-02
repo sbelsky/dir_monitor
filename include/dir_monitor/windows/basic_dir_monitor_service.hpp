@@ -168,32 +168,8 @@ public:
             dir_monitor_event ev;
             if (impl)
                 ev = impl->popfront_event(ec);
-            PostAndWait(ec, ev);
-        }
-
-    protected:
-        void PostAndWait(const boost::system::error_code ec, const dir_monitor_event& ev) const
-        {
-            boost::mutex post_mutex;
-            boost::condition_variable post_conditional_variable;
-            bool post_cancel = false;
-
-            this->io_service_.post(
-                [&]
-                {
-                    handler_(ec, ev);
-                    boost::unique_lock<boost::mutex> lock(post_mutex);
-                    post_cancel = true;
-                    post_conditional_variable.notify_one();
-                }
-            );
-            boost::unique_lock<boost::mutex> lock(post_mutex);
-            while (!post_cancel)
-            {
-                post_conditional_variable.wait_for(lock, boost::chrono::milliseconds(1000));
-                if (this->io_service_.stopped())
-                    break;
-            }
+            if(ec != boost::asio::error::operation_aborted)
+                this->io_service_.post(boost::asio::detail::bind_handler(handler_, ec, ev));
         }
 
     private:
